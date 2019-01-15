@@ -23,7 +23,7 @@
 
 	<groupId>fr.cnes.regards.cloud</groupId>
 	<artifactId>bootstrap-gateway</artifactId>
-	<version>3.0.0-RELEASE</version>
+	<version>3.1.0-RC</version>
 	<description>REGARDS Cloud - Gateway server</description>
 	<packaging>jar</packaging>
 	
@@ -52,7 +52,7 @@
 	<parent>
 		<groupId>fr.cnes.regards</groupId>
 		<artifactId>regards-boot-parent</artifactId>
-		<version>3.0.0-RELEASE</version>
+		<version>3.1.0-RC</version>
 		<relativePath></relativePath>
 	</parent>
 
