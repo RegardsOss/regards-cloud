@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -32,7 +32,7 @@ import org.springframework.http.ResponseEntity;
 
 import com.google.common.collect.Sets;
 
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
@@ -63,7 +63,7 @@ public class RegardsInternalAuthenticationPluginTest {
         /*
          * Set all parameters
          */
-        final Set<PluginParameter> parameters = Sets.newHashSet();
+        Set<IPluginParam> parameters = Sets.newHashSet();
         try {
             // instantiate plugin
             plugin = PluginUtils.getPlugin(parameters, RegardsInternalAuthenticationPlugin.class, new HashMap<>());

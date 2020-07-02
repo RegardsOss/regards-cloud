@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -28,16 +28,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 
+import fr.cnes.regards.framework.encryption.exception.EncryptionException;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.modules.plugins.domain.parameter.IPluginParam;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
-import fr.cnes.regards.modules.authentication.plugins.IAuthenticationPlugin;
 import fr.cnes.regards.modules.authentication.plugins.impl.ldap.LdapAuthenticationPlugin;
 
 /**
@@ -58,27 +60,20 @@ public class AuthenticationControllerIT extends AbstractRegardsTransactionalIT {
      * Access route
      */
     private static final String IDP_URL = InternalAuthenticationController.TYPE_MAPPING + "/{idp_id}";
-
-    /**
-     * Default plugin version
-     */
-    private static final String DEFAULT_PLUGIN_VERSION = "1.0";
-
+    
     /**
      * Default plugin label
      */
     private static final String DEFAULT_PLUGIN_LABEL = "plugin1";
 
     /**
-     * LDAP plugin id
-     */
-    private static final String PLUGIN_ID_LDAP = "LdapAuthenticationPlugin";
-
-    /**
      * Repository stub
      */
     @Autowired
     private IPluginConfigurationRepository pluginConfRepo;
+
+    @Autowired
+    private IPluginService pluginService;
 
     /**
      * A {@link PluginConfiguration} used in the test
@@ -94,20 +89,20 @@ public class AuthenticationControllerIT extends AbstractRegardsTransactionalIT {
      * Init the context of the tests
      */
     @Before
-    public void init() {
-        PluginMetaData metadata = new PluginMetaData();
-        metadata.setPluginId(PLUGIN_ID_LDAP);
-        metadata.setPluginClassName(LdapAuthenticationPlugin.class.getName());
-        metadata.getInterfaceNames().add(IAuthenticationPlugin.class.getName());
-        metadata.setVersion(DEFAULT_PLUGIN_VERSION);
-        PluginConfiguration conf = new PluginConfiguration(metadata, DEFAULT_PLUGIN_LABEL, 0);
-        Set<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(LdapAuthenticationPlugin.PARAM_LDAP_HOST, "test")
-                .addParameter(LdapAuthenticationPlugin.PARAM_LDAP_PORT, "8080")
-                .addParameter(LdapAuthenticationPlugin.PARAM_LDAP_CN, "ou=people,ou=commun")
-                .addParameter(LdapAuthenticationPlugin.PARAM_LDAP_USER_EMAIL_ATTTRIBUTE, "email").getParameters();
+    public void init() throws EncryptionException, EntityNotFoundException, EntityInvalidException {
+        PluginConfiguration conf = new PluginConfiguration(DEFAULT_PLUGIN_LABEL,
+                                                           0,
+                                                           LdapAuthenticationPlugin.class.getAnnotation(Plugin.class)
+                                                                   .id());
+
+        Set<IPluginParam> parameters = IPluginParam
+                .set(IPluginParam.build(LdapAuthenticationPlugin.PARAM_LDAP_HOST, "test"),
+                     IPluginParam.build(LdapAuthenticationPlugin.PARAM_LDAP_PORT, "8080"),
+                     IPluginParam.build(LdapAuthenticationPlugin.PARAM_LDAP_CN, "ou=people,ou=commun"),
+                     IPluginParam.build(LdapAuthenticationPlugin.PARAM_LDAP_USER_EMAIL_ATTTRIBUTE, "email"));
+
         conf.setParameters(parameters);
-        aPluginConfSaved = pluginConfRepo.save(conf);
+        aPluginConfSaved = pluginService.savePluginConfiguration(conf);
     }
 
     /**
@@ -131,9 +126,11 @@ public class AuthenticationControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_ADM_ARC_020")
     @Test
     public void retrieveIdentityProvider() {
-        performDefaultGet(IDP_URL, customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_CONTENT)
+        performDefaultGet(IDP_URL,
+                          customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_CONTENT)
                                   .expectIsNotEmpty(JSON_PATH_LINKS).expectIsArray(JSON_PATH_LINKS),
-                          "retrieveIdentityProvider : Error getting identity provider", aPluginConfSaved.getId());
+                          "retrieveIdentityProvider : Error getting identity provider",
+                          aPluginConfSaved.getId());
     }
 
     /**
@@ -144,8 +141,10 @@ public class AuthenticationControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_ADM_ARC_020")
     @Test
     public void retrieveInexistantIdentityProvider() {
-        performDefaultGet(IDP_URL, customizer().expectStatusNotFound(),
-                          "retrieveInexistantIdentityProvider : Error getting identity provider", 123);
+        performDefaultGet(IDP_URL,
+                          customizer().expectStatusNotFound(),
+                          "retrieveInexistantIdentityProvider : Error getting identity provider",
+                          123);
     }
 
     /**
@@ -156,20 +155,21 @@ public class AuthenticationControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_ADM_ARC_020")
     @Test
     public void createIdentityProvider() {
+        PluginConfiguration conf = new PluginConfiguration("Plugin2",
+                                                           0,
+                                                           LdapAuthenticationPlugin.class.getAnnotation(Plugin.class)
+                                                                   .id());
 
-        PluginMetaData metadata = new PluginMetaData();
-        metadata.setPluginId(PLUGIN_ID_LDAP);
-        metadata.setPluginClassName(LdapAuthenticationPlugin.class.getName());
-        metadata.setVersion(DEFAULT_PLUGIN_VERSION);
-        PluginConfiguration conf = new PluginConfiguration(metadata, "Plugin2", 0);
-        Set<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(LdapAuthenticationPlugin.PARAM_LDAP_HOST, "test")
-                .addParameter(LdapAuthenticationPlugin.PARAM_LDAP_PORT, "8080")
-                .addParameter(LdapAuthenticationPlugin.PARAM_LDAP_CN, "ou=people,ou=commun")
-                .addParameter(LdapAuthenticationPlugin.PARAM_LDAP_USER_EMAIL_ATTTRIBUTE, "email").getParameters();
+        Set<IPluginParam> parameters = IPluginParam
+                .set(IPluginParam.build(LdapAuthenticationPlugin.PARAM_LDAP_HOST, "test"),
+                     IPluginParam.build(LdapAuthenticationPlugin.PARAM_LDAP_PORT, "8080"),
+                     IPluginParam.build(LdapAuthenticationPlugin.PARAM_LDAP_CN, "ou=people,ou=commun"),
+                     IPluginParam.build(LdapAuthenticationPlugin.PARAM_LDAP_USER_EMAIL_ATTTRIBUTE, "email"));
+
         conf.setParameters(parameters);
 
-        performDefaultPost(InternalAuthenticationController.TYPE_MAPPING, conf,
+        performDefaultPost(InternalAuthenticationController.TYPE_MAPPING,
+                           conf,
                            customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_CONTENT)
                                    .expectIsNotEmpty(JSON_PATH_LINKS).expectIsArray(JSON_PATH_LINKS),
                            "createIdentityProvider : Error getting identity provider");
@@ -186,10 +186,13 @@ public class AuthenticationControllerIT extends AbstractRegardsTransactionalIT {
     public void updateIdentityProvider() {
         String newVersion = "2.0";
         aPluginConfSaved.setVersion(newVersion);
-        performDefaultPut(IDP_URL, aPluginConfSaved, customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_CONTENT)
+        performDefaultPut(IDP_URL,
+                          aPluginConfSaved,
+                          customizer().expectStatusOk().expectIsNotEmpty(JSON_PATH_CONTENT)
                                   .expectIsNotEmpty(JSON_PATH_LINKS).expectIsArray(JSON_PATH_LINKS)
                                   .expectValue(JSON_PATH_CONTENT + ".version", newVersion),
-                          "updateIdentityProvider : Error getting identity provider", aPluginConfSaved.getId());
+                          "updateIdentityProvider : Error getting identity provider",
+                          aPluginConfSaved.getId());
     }
 
     /**
@@ -200,13 +203,14 @@ public class AuthenticationControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_ADM_ARC_020")
     @Test
     public void updateInexistantIdentityProvider() {
-        PluginMetaData metadata = new PluginMetaData();
-        metadata.setPluginId(PLUGIN_ID_LDAP);
-        metadata.setPluginClassName(LdapAuthenticationPlugin.class.getName());
-        metadata.setVersion(DEFAULT_PLUGIN_VERSION);
-        PluginConfiguration unSavedPluginConf = new PluginConfiguration(metadata, DEFAULT_PLUGIN_LABEL, 0);
+        PluginConfiguration unSavedPluginConf = new PluginConfiguration(DEFAULT_PLUGIN_LABEL,
+                                                                        0,
+                                                                        LdapAuthenticationPlugin.class
+                                                                                .getAnnotation(Plugin.class).id());
         unSavedPluginConf.setId(12345L);
-        performDefaultPut(IDP_URL, unSavedPluginConf, customizer().expectStatusNotFound(),
+        performDefaultPut(IDP_URL,
+                          unSavedPluginConf,
+                          customizer().expectStatusNotFound(),
                           "updateInexistantIdentityProvider : Error getting identity provider",
                           unSavedPluginConf.getId());
     }
@@ -219,14 +223,16 @@ public class AuthenticationControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_ADM_ARC_020")
     @Test
     public void updateInvalidIdentityProvider() {
-        PluginMetaData metadata = new PluginMetaData();
-        metadata.setPluginId(PLUGIN_ID_LDAP);
-        metadata.setPluginClassName(LdapAuthenticationPlugin.class.getName());
-        metadata.setVersion(DEFAULT_PLUGIN_VERSION);
-        PluginConfiguration conf = new PluginConfiguration(metadata, DEFAULT_PLUGIN_LABEL, 0);
+        PluginConfiguration conf = new PluginConfiguration(DEFAULT_PLUGIN_LABEL,
+                                                           0,
+                                                           LdapAuthenticationPlugin.class.getAnnotation(Plugin.class)
+                                                                   .id());
         conf.setId(123L);
-        performDefaultPut(IDP_URL, conf, customizer().expectStatusBadRequest(),
-                          "updateInvalidIdentityProvider : Error getting identity provider", 12);
+        performDefaultPut(IDP_URL,
+                          conf,
+                          customizer().expectStatusBadRequest(),
+                          "updateInvalidIdentityProvider : Error getting identity provider",
+                          12);
     }
 
     /**
@@ -236,16 +242,11 @@ public class AuthenticationControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_ADM_ARC_010")
     @Requirement("REGARDS_DSL_ADM_ARC_020")
     @Test
-    public void deleteIdentityProvider() {
-        PluginMetaData metadata = new PluginMetaData();
-        metadata.setPluginId(PLUGIN_ID_LDAP);
-        metadata.setPluginClassName(LdapAuthenticationPlugin.class.getName());
-        metadata.getInterfaceNames().add("fr.cnes.regards.framework.some.modules.PluginToDelete");
-        metadata.setVersion(DEFAULT_PLUGIN_VERSION);
-        PluginConfiguration aPluginConfToDelete = new PluginConfiguration(metadata, "PluginToDelete", 0);
-        aPluginConfToDelete = pluginConfRepo.save(aPluginConfToDelete);
-        performDefaultDelete(IDP_URL, customizer().expectStatusOk(),
-                             "deleteIdentityProvider : Error getting identity provider", aPluginConfToDelete.getId());
+    public void deleteIdentityProvider() throws EncryptionException, EntityNotFoundException, EntityInvalidException {
+        performDefaultDelete(IDP_URL,
+                             customizer().expectStatusOk(),
+                             "deleteIdentityProvider : Error getting identity provider",
+                             aPluginConfSaved.getBusinessId());
     }
 
     /**
@@ -256,7 +257,7 @@ public class AuthenticationControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_ADM_ARC_020")
     @Test
     public void deleteInexistantIndentityProvider() {
-        performDefaultDelete(IDP_URL, customizer().expectStatusNotFound(), "Error getting identity provider", 1000);
+        performDefaultDelete(IDP_URL, customizer().expectStatusNotFound(), "Error getting identity provider", "plop");
 
     }
 

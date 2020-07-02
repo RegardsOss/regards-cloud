@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.authentication.rest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -31,7 +32,6 @@ import fr.cnes.regards.framework.module.rest.exception.EntityOperationForbiddenE
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
-import fr.cnes.regards.modules.authentication.service.role.CoupleJwtRole;
 import fr.cnes.regards.modules.authentication.service.role.IBorrowRoleService;
 
 /**
@@ -65,10 +65,9 @@ public class BorrowRoleController {
     @ResponseBody
     @ResourceAccess(role = DefaultRole.PUBLIC, description = "endpoint allowing to switch role")
     @RequestMapping(method = RequestMethod.GET, path = PATH_BORROW_ROLE_TARGET)
-    public ResponseEntity<CoupleJwtRole> switchRole(@PathVariable("target_name") String pTargetRoleName)
+    public ResponseEntity<DefaultOAuth2AccessToken> switchRole(@PathVariable("target_name") String targetRoleName)
             throws EntityOperationForbiddenException, JwtException {
-        CoupleJwtRole newToken = borrowRoleService.switchTo(pTargetRoleName);
-        return new ResponseEntity<>(newToken, HttpStatus.OK);
+        return new ResponseEntity<>(borrowRoleService.switchTo(targetRoleName), HttpStatus.OK);
 
     }
 }

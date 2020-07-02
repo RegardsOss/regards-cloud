@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -176,10 +176,10 @@ public class ExternalAuthenticationController implements IResourceController<Plu
      */
     @ResourceAccess(description = "Delete a Service Provider plugin")
     @RequestMapping(path = "/{sp_id}", method = RequestMethod.DELETE)
-    public ResponseEntity<Void> deleteServiceProviderPlugin(@PathVariable("sp_id") final Long pPluginConfigurationId) {
+    public ResponseEntity<Void> deleteServiceProviderPlugin(@PathVariable("sp_id") final String pluginBisnessId) {
         ResponseEntity<Void> response;
         try {
-            service.deleteServiceProviderPlugin(pPluginConfigurationId);
+            service.deleteServiceProviderPlugin(pluginBisnessId);
             response = new ResponseEntity<>(HttpStatus.OK);
         } catch (final ModuleException e) {
             LOG.error(e.getMessage(), e);

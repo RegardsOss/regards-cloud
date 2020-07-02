@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -212,7 +212,7 @@ public class KerberosServiceProviderPlugin implements IServiceProviderPlugin {
 
             @Override
             public AppConfigurationEntry[] getAppConfigurationEntry(final String pName) {
-                final Map<String, String> options = new HashMap<>();
+                Map<String, String> options = new HashMap<>();
                 options.put("principal", pPrincipal);
                 options.put("realm", pRealm);
                 options.put("keyTab", pKeyTab.getAbsolutePath());

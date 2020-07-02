@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -69,10 +69,10 @@ public interface IExternalAuthenticationPluginsService {
 
     /**
      * Delete an Service Provider plugin
-     * @param pPluginConfigurationId PluginConfiguration identifier to delete
+     * @param pluginBisnessId PluginConfiguration identifier to delete
      * @throws ModuleException Plugin to delete does not exists
      */
-    void deleteServiceProviderPlugin(Long pPluginConfigurationId) throws ModuleException;
+    void deleteServiceProviderPlugin(String pluginBisnessId) throws ModuleException;
 
     /**
      * Authenticate with the given Service Provider plugin.

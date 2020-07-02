@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -36,7 +36,7 @@ public class AuthenticationException extends OAuth2Exception {
 
     public AuthenticationException(final String pMsg, final AuthenticationStatus pStatus) {
         super(pMsg);
-        this.addAdditionalInformation(ERROR_TYPE_KEY, pStatus.toString());
+        super.addAdditionalInformation(ERROR_TYPE_KEY, pStatus.toString());
     }
 
 }

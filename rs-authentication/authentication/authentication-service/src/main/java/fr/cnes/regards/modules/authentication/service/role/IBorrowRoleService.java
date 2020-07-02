@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.modules.authentication.service.role;
 
+import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
+
 import fr.cnes.regards.framework.module.rest.exception.EntityOperationForbiddenException;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
 
@@ -30,6 +32,6 @@ public interface IBorrowRoleService {
      * generate a new JWT for the given role if the current user can switch to this role
      * @return couple (new JWT, Role name wanted)
      */
-    CoupleJwtRole switchTo(String pTargetRoleName) throws JwtException, EntityOperationForbiddenException;
+    DefaultOAuth2AccessToken switchTo(String pTargetRoleName) throws JwtException, EntityOperationForbiddenException;
 
 }

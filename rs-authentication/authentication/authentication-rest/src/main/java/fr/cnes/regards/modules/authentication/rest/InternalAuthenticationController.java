@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2020 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -186,11 +186,10 @@ public class InternalAuthenticationController implements IResourceController<Plu
      */
     @ResourceAccess(description = "Delete an Identity Provider plugin", role = DefaultRole.PROJECT_ADMIN)
     @RequestMapping(path = "/{idp_id}", method = RequestMethod.DELETE)
-    public ResponseEntity<Void> deleteIdentityProviderPlugin(
-            @PathVariable("idp_id") final Long pPluginConfigurationId) {
+    public ResponseEntity<Void> deleteIdentityProviderPlugin(@PathVariable("idp_id") final String pluginBisnessId) {
         ResponseEntity<Void> response;
         try {
-            service.deleteIdentityProviderPlugin(pPluginConfigurationId);
+            service.deleteIdentityProviderPlugin(pluginBisnessId);
             response = new ResponseEntity<>(HttpStatus.OK);
         } catch (final EntityNotFoundException e) {
             LOG.error(e.getMessage(), e);
