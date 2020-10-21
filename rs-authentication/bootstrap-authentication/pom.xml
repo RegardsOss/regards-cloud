@@ -28,7 +28,7 @@
     <parent>
         <groupId>fr.cnes.regards</groupId>
         <artifactId>regards-boot-parent</artifactId>
-        <version>1.0.1</version>
+        <version>1.2.1</version>
         <relativePath></relativePath>
     </parent>
 
@@ -51,10 +51,10 @@
             <artifactId>security-regards-starter</artifactId>
         </dependency>
         <!-- Enable swagger features -->
-        <dependency>
+<!--         <dependency>
             <groupId>fr.cnes.regards.framework</groupId>
             <artifactId>swagger-regards-starter</artifactId>
-        </dependency>
+        </dependency> -->
         <!-- Enable cloud features -->
         <dependency>
             <groupId>fr.cnes.regards.framework</groupId>
