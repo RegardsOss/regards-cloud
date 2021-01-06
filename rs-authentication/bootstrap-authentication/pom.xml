@@ -28,7 +28,7 @@
     <parent>
         <groupId>fr.cnes.regards</groupId>
         <artifactId>regards-boot-parent</artifactId>
-        <version>1.2.1</version>
+        <version>1.4.0</version>
         <relativePath></relativePath>
     </parent>
 
@@ -37,6 +37,7 @@
         <sonar.language>java</sonar.language>
         <sonar.jacoco.reportMissing.force.zero>true</sonar.jacoco.reportMissing.force.zero>
         <fr.cnes.regards.docker.image.name>rs-authentication</fr.cnes.regards.docker.image.name>
+        <docker.guest.port>9034</docker.guest.port>
     </properties>
 
     <dependencies>

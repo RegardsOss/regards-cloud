@@ -25,28 +25,28 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.cloud.commons.httpclient.ApacheHttpClientConnectionManagerFactory;
 import org.springframework.cloud.commons.httpclient.ApacheHttpClientFactory;
 import org.springframework.cloud.netflix.zuul.filters.ProxyRequestHelper;
 import org.springframework.cloud.netflix.zuul.filters.ZuulProperties;
 import org.springframework.cloud.netflix.zuul.filters.route.SimpleHostRoutingFilter;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Lists;
 import com.netflix.zuul.context.RequestContext;
 
-import fr.cnes.regards.framework.proxy.ProxyfiedHttpClient;
+import fr.cnes.regards.framework.proxy.ProxyConfiguration;
 
 /**
  * @author sbinda
  *
  */
 @Component
-@DependsOn("proxyHttpClient")
+@AutoConfigureAfter(value = ProxyConfiguration.class)
 public class SimpleHostRoutingWithProxyFilter extends SimpleHostRoutingFilter {
 
-    @Autowired
+    @Autowired(required = false)
     private HttpClient httpClient;
 
     public static final String HEADER_HOST = "Host";
@@ -61,7 +61,6 @@ public class SimpleHostRoutingWithProxyFilter extends SimpleHostRoutingFilter {
             ApacheHttpClientConnectionManagerFactory connectionManagerFactory,
             ApacheHttpClientFactory httpClientFactory) {
         super(helper, properties, connectionManagerFactory, httpClientFactory);
-        // TODO : Les paramètres ne sont pas reportés dans la requête proxyfiée !!!!!!!
     }
 
     /* (non-Javadoc)
@@ -69,11 +68,10 @@ public class SimpleHostRoutingWithProxyFilter extends SimpleHostRoutingFilter {
      */
     @Override
     protected CloseableHttpClient newClient() {
-        if (httpClient == null) {
-
+        if ((httpClient == null) || !(httpClient instanceof CloseableHttpClient)) {
             return super.newClient();
         } else {
-            return new ProxyfiedHttpClient((fr.cnes.httpclient.HttpClient) httpClient);
+            return (CloseableHttpClient) httpClient;
         }
     }
 

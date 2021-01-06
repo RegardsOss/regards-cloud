@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.microservices.authentication;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -29,12 +31,15 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication(scanBasePackages = { "fr.cnes.regards.modules", "fr.cnes.regards.contrib" })
 public class Application { // NOSONAR
 
-    /**
-     * Microservice bootstrap method
-     * @param pArgs microservice bootstrap arguments
-     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
+
     public static void main(final String[] pArgs) {
-        SpringApplication.run(Application.class, pArgs); // NOSONAR
+        try {
+            SpringApplication.run(Application.class, pArgs); // NOSONAR
+        } catch (Exception e) {
+            LOGGER.error("Going to exit", e);
+            System.exit(1);
+        }
     }
 }
 // CHECKSTYLE:ON
